@@ -36,7 +36,7 @@ class GeoDistance(BaseModel):
 class ApiRequest(BaseModel):
 
     request_id: str
-    geo_path: List[GeoCoords] = []
+    geo_path: List[GeoCoords]
 
     @validator('geo_path')
     def geo_validator(cls, v):

@@ -2,5 +2,7 @@ asyncpg==0.25.0
 databases==0.5.5
 fastapi==0.75.2
 httpx==0.22.0
+Jinja2==3.1.2
 pydantic==1.9.0
+ujson==5.2.0
 uvicorn==0.17.6

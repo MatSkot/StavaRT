@@ -1,0 +1,101 @@
+<html>
+
+<head>
+    <title>Geo Distance Calculator</title>
+    <script src="static/OpenLayers.js"></script>
+    <script>
+        var map = new OpenLayers.Map('selectMap', {
+            layers: [
+                new OpenLayers.layer.Tile({
+                    source: new OpenLayers.source.MapQuest({ layer: 'sat' })
+                }),
+                new OpenLayers.layer.Vector({
+                    source: vectorSource
+                })
+            ],
+            view: new OpenLayers.View({
+                center: [0, 0],
+                zoom: 2
+            })
+        });
+
+        var styles = {
+            'square': new OpenLayers.style.Style({
+                image: new OpenLayers.style.RegularShape({
+                    fill: fillCOpenLayersor,
+                    stroke: stroke,
+                    points: 4,
+                    radius: 10,
+                    angle: Math.PI / 4
+                })
+            }),
+            'triangle': new OpenLayers.style.Style({
+                image: new OpenLayers.style.RegularShape({
+                    fill: fillCOpenLayersor,
+                    stroke: stroke,
+                    points: 3,
+                    radius: 10,
+                    rotation: Math.PI / 4,
+                    angle: 0
+                })
+            })
+        };
+
+        var stroke,
+            fillCOpenLayersor;
+        map.on("singleclick", function(evt){
+            var self = this;
+
+            var latLong = OpenLayers.proj.transform(evt.coordinate, 'EPSG:3857', 'EPSG:4326');
+            var lat     = latLong[1];
+            var long    = latLong[0];
+
+            self.params.options.mapClick({lat: lat, long: long});
+
+            if(self.dinamicPinLayer !== undefined){
+                consOpenLayerse.log("moove")
+                self.iconGeometry.setCoordinates(evt.coordinate);
+                  //or create another pin
+            } else {
+                self.iconGeometry = new OpenLayers.geom.Point(evt.coordinate);
+                var iconFeature = new OpenLayers.Feature({
+                    geometry: self.iconGeometry,
+                    name: 'Null Island',
+                    population: 4000,
+                    rainfall: 500
+                });
+                var iconStyle = new OpenLayers.style.Style({
+                    image: new OpenLayers.style.Icon(({
+                        anchor: [0.5, 46],
+                        anchorXUnits: 'fraction',
+                        anchorYUnits: 'pixels',
+                        size: [48, 48],
+                        opacity: 1,
+                        src: '/resources/cloud/contrOpenLayerss/cloudMap/img/redmarker_small.png'
+                    }))
+                });
+
+                iconFeature.setStyle(iconStyle);
+
+                var vectorSource = new OpenLayers.source.Vector({
+                    features: [iconFeature]
+                });
+                self.dinamicPinLayer = new OpenLayers.layer.Vector({
+                    source: vectorSource
+                });
+                self.map.addLayer(self.dinamicPinLayer);
+            }
+
+
+        }
+    </script>
+</head>
+<body>
+    <div style="margin:auto">
+        <div id="selectMap" style="float:left;height:500px; width:500px;" onClick="addMarker"></div>
+        <input style="width:250px;height:500px"></textarea>
+    </div>
+
+</body>
+
+</html>

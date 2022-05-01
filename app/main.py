@@ -14,6 +14,8 @@ app = FastAPI(
 app.include_router(geodistance.router)
 app.include_router(web.router)
 
+app.mount("/static", web.static, name="static")
+
 # @app.on_event("startup")
 # async def startup_event():
 #     await stats_db.connect()
