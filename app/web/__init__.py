@@ -5,8 +5,8 @@ from fastapi.templating import Jinja2Templates
 
 router = APIRouter()
 
-static = StaticFiles(directory="app/web/static")
-templates = Jinja2Templates(directory="app/web/templates")
+static = StaticFiles(directory="static")
+templates = Jinja2Templates(directory="templates")
 
 
 @router.get('/', response_class=HTMLResponse, tags=['WEB'])
