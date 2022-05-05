@@ -1,9 +1,12 @@
 import asyncio
+import functools
+import traceback
+from pydantic import ValidationError
 import ujson
 
 from app.libs.db import save_stats
 from app.libs.tools import get_remote, basic_auth, utc_now
-from app.libs.models import ApiRequest, ApiResponse, GeoCoords, RemoteRequest
+from app.libs.models import ApiRequest, ApiResponse, GeoCoords, RemoteRequest, ApiError
 
 from fastapi import APIRouter
 from pydantic.types import List
@@ -12,6 +15,20 @@ router = APIRouter()
 
 USERNAME = 'Cristoforo'
 PASSWORD = 'Colombo'
+
+
+def ensure_generic_response(func):
+    @functools.wraps(func)
+    async def wrapped(*args, **kwargs):
+        try:
+            return await func(*args, **kwargs)
+        except ValidationError as e:
+            print(e)
+            return ApiError(message='invalid request')
+        except Exception as e:
+            print(traceback.format_exc())
+            return ApiError(message=e)
+    return wrapped
 
 
 async def geo_distance(origin: GeoCoords, dest: GeoCoords) -> float:
@@ -42,6 +59,7 @@ async def get_distance_for_path(path: List[GeoCoords]) -> List[float]:
 
 
 @router.post('/api/calc_distance', response_model=ApiResponse, tags=['API'])
+@ensure_generic_response
 async def distance_api(request: ApiRequest):
     """
     Calculates distance between two geo points.

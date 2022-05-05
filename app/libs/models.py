@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, Field, ValidationError, validator
+from pydantic import BaseModel, Field, ValidationError, validator, root_validator
 from pydantic.types import List
 
 
@@ -28,15 +28,18 @@ class GeoCoords(BaseModel):
         raise ValidationError(f'Incorrect Longitude value: {v}')
 
 
-class GeoDistance(BaseModel):
+class GeoPath(BaseModel):
 
-    distance: float
-
-
-class ApiRequest(BaseModel):
-
-    request_id: str
     geo_path: List[GeoCoords]
+
+    @validator('geo_path', pre=True)
+    def pat_converter(cls, values):
+        for i, v in enumerate(values):
+            lat, lon = v.split(':')
+            values[i] = GeoCoords(
+                latitude=lat,
+                longitude=lon)
+        return values
 
     @validator('geo_path')
     def geo_validator(cls, v):
@@ -46,14 +49,26 @@ class ApiRequest(BaseModel):
         elif len(v) > 50:
             reason = 'long'
         if reason:
-            raise ValidationError(
+            raise ValueError(
                 f'Geo path is to {reason}, path length {len(v)}. \
                 Minimum 2 geo points, Maximum 50 geo points')
         return v
 
 
+class GeoDistance(BaseModel):
+
+    distance: float
+
+
+class ApiRequest(GeoPath):
+
+    request_id: str
+    geo_path: List[GeoCoords]
+
+
 class ApiResponse(BaseModel):
 
+    status: str = "ok"
     request: ApiRequest
     distances: List[float]
     start_time: datetime
@@ -75,6 +90,13 @@ class ApiResponse(BaseModel):
     @property
     def avg_distance(cls):
         return cls.finish_time - cls.start_time
+
+
+class ApiError(BaseModel):
+
+    status: str = "error"
+    code: int = 666
+    message: str = ""
 
 
 class RemoteRequest(BaseModel):

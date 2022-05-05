@@ -14,6 +14,14 @@
   </head>
   <body>
     <div id="map" class="map"></div>
+    <form action="/" method="GET">
+      <input type="hidden" name="p" value="10.23:80.34">
+      <input type="hidden" name="p" value="12.23:60.34">
+      <input type="submit" value="Calc Distance"/>
+    </form>
+    {% if distance %}
+      <div class="distance">Calculated distance is <b>{{ distance }}</b></div>
+    {% endif %}
     <script src="static/main.js"></script>
   </body>
 </html>
