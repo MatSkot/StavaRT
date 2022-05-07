@@ -35,3 +35,17 @@ def basic_auth(username, password):
 
 def utc_now():
     return datetime.datetime.now(datetime.timezone.utc)
+
+
+def do_lprofile(func):
+    def profiled_func(*args, **kwargs):
+        try:
+            import line_profiler
+            lp = line_profiler.LineProfiler()
+            lp.add_function(func)
+            result = lp.runcall(func, *args, **kwargs)
+            lp.print_stats()
+        except Exception:
+            result = func(*args, **kwargs)
+        return result
+    return profiled_func
