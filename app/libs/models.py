@@ -19,13 +19,13 @@ class GeoCoords(BaseModel):
     def lat_validator(cls, v):
         if v is not None and abs(v) <= 90:
             return v
-        raise ValidationError(f'Incorrect Latitude value: {v}')
+        raise ValueError(f'Incorrect Latitude value: {v}')
 
     @validator('longitude')
     def lon_validator(cls, v):
         if v is not None and abs(v) <= 180:
             return v
-        raise ValidationError(f'Incorrect Longitude value: {v}')
+        raise ValueError(f'Incorrect Longitude value: {v}')
 
 
 class GeoPath(BaseModel):
@@ -33,12 +33,14 @@ class GeoPath(BaseModel):
     geo_path: List[GeoCoords]
 
     @validator('geo_path', pre=True)
-    def pat_converter(cls, values):
+    def path_converter(cls, values):
+
         for i, v in enumerate(values):
-            lat, lon = v.split(':')
-            values[i] = GeoCoords(
-                latitude=lat,
-                longitude=lon)
+            if v and isinstance(v, str):
+                lat, lon = v.split(':')
+                values[i] = GeoCoords(
+                    latitude=lat,
+                    longitude=lon)
         return values
 
     @validator('geo_path')
@@ -50,8 +52,7 @@ class GeoPath(BaseModel):
             reason = 'long'
         if reason:
             raise ValueError(
-                f'Geo path is to {reason}, path length {len(v)}. \
-                Minimum 2 geo points, Maximum 50 geo points')
+                f'Path is to {reason}, path length {len(v)}. Min 2 geo points, Max 50 geo points')
         return v
 
 

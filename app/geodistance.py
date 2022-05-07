@@ -1,20 +1,23 @@
 import asyncio
 import functools
+import logging
+import orjson
 import traceback
+
 from pydantic import ValidationError
-import ujson
 
 from app.libs.db import save_stats
-from app.libs.tools import get_remote, basic_auth, utc_now
+from app.libs.tools import get_remote, basic_auth, utc_now, do_lprofile
 from app.libs.models import ApiRequest, ApiResponse, GeoCoords, RemoteRequest, ApiError
 
 from fastapi import APIRouter
 from pydantic.types import List
 
+from app.settings import GEODISTANCE_USERNAME, GEODISTANCE_PASSWORD
+
 router = APIRouter()
 
-USERNAME = 'Cristoforo'
-PASSWORD = 'Colombo'
+logger = logging.getLogger()
 
 
 def ensure_generic_response(func):
@@ -23,11 +26,11 @@ def ensure_generic_response(func):
         try:
             return await func(*args, **kwargs)
         except ValidationError as e:
-            print(e)
+            logger.error(f'invalid request: {e}')
             return ApiError(message='invalid request')
         except Exception as e:
-            print(traceback.format_exc())
-            return ApiError(message=e)
+            logger.error(f'Unexcepted error occures :{e}\n{traceback.format_exc()}')
+            return ApiError(message='Unexcepted error occures')
     return wrapped
 
 
@@ -40,15 +43,14 @@ async def geo_distance(origin: GeoCoords, dest: GeoCoords) -> float:
                 'origin': f'{origin.latitude},{origin.longitude}',
                 'destination': f'{dest.latitude},{dest.longitude}'
             },
-            headers={'Authorization': basic_auth(USERNAME, PASSWORD)}
+            headers={'Authorization': basic_auth(GEODISTANCE_USERNAME, GEODISTANCE_PASSWORD)}
         )
     )
     try:
-        j = ujson.loads(data.response)
+        j = orjson.loads(data.response)
         return j['distance']
     except Exception as e:
-        print(data.response)
-        print("Failed to parse geo distance: ", e)
+        logger.error(f"Failed to parse geo distance: {e}\n{data.response}")
     return 0.0
 
 
@@ -62,7 +64,9 @@ async def get_distance_for_path(path: List[GeoCoords]) -> List[float]:
 @ensure_generic_response
 async def distance_api(request: ApiRequest):
     """
-    Calculates distance between two geo points.
+    Calculates distance between two geo points. Path must be between 2 and 50 geo points.
+    Each point should contain valid latitude and longitude. Returns start and finish times,
+    partial distance between consecutive points and total distance between all points.
     """
     start_time = utc_now()
 
@@ -75,8 +79,8 @@ async def distance_api(request: ApiRequest):
         total_distance=sum(results)
     )
     try:
-        await save_stats(response.total_distance, response.start_time, response.finish_time)
+        await save_stats(request.request_id, response.start_time, response.finish_time)
     except Exception as e:
-        print("Failed to save statistics: ", e)
+        logger.error(f"Failed to save statistics: {e}")
 
     return response

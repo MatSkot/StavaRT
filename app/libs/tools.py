@@ -1,11 +1,13 @@
 import datetime
 import httpx
+import logging
 import traceback
 
 from base64 import b64encode
 
 from app.libs.models import RemoteRequest
 
+logger = logging.getLogger()
 
 async def get_remote(remote: RemoteRequest) -> RemoteRequest:
 
@@ -19,10 +21,9 @@ async def get_remote(remote: RemoteRequest) -> RemoteRequest:
                 timeout=httpx.Timeout(remote.timeout))
             remote.response = response.content
         except httpx.ReadTimeout:
-            print("REQUEST TIMEOUT: ", remote.url)
+            logger.error(f"REQUEST TIMEOUT: {remote.url}")
         except Exception as e:
-            print(traceback.format_exc())
-            print("Request failed with: ", e)
+            logger.error(f"Request failed with: {e}\n{traceback.format_exc()}")
 
     return remote
 

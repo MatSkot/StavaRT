@@ -1,4 +1,5 @@
 import functools
+import logging
 import traceback
 
 from typing import List, Optional
@@ -13,6 +14,8 @@ from pydantic import ValidationError
 from app.geodistance import get_distance_for_path
 from app.libs.models import GeoPath
 
+logger = logging.getLogger()
+
 router = APIRouter()
 
 static = StaticFiles(directory="static")
@@ -25,12 +28,12 @@ def error_page(func):
         try:
             return await func(*args, **kwargs)
         except ValidationError as e:
-            print(e)
+            logger.error(f"Invalid request: {e}\n{traceback.format_exc()}")
             return templates.TemplateResponse("error.html", {
                 "request": kwargs['request'],
                 "error": 'invalid request'})
-        except Exception:
-            print(traceback.format_exc())
+        except Exception as e:
+            logger.error(f"Web error: {e}\n{traceback.format_exc()}")
             return templates.TemplateResponse("error.html", {
                 "request": kwargs['request'],
                 "error": 'unexcepted error'})
