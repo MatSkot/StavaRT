@@ -6,19 +6,32 @@
     <script src="static/ol.js"></script>
     <link rel="stylesheet" href="static/ol.css">
     <style>
+      h1{
+        clear:both;
+      }
       .map {
-        width: 100%;
+        float: left;
+        width: 80%;
         height:400px;
       }
+      .calc {
+        width:19%;
+      }
+      .calc, .distance {
+        padding:5px;
+        float:right;
+      }
+
     </style>
   </head>
   <body>
+    <h1>Stava Recruitment Task</h1>
     <div id="map" class="map"></div>
     <form id="calcForm" action="/" method="GET">
-      <input type="submit" value="Calc Distance"/>
+      <input class="calc" type="submit" value="Calc Distance"/>
     </form>
     {% if distance %}
-      <div class="distance">Calculated distance is <b>{{ distance }}</b></div>
+      <div class="distance">Calculated distance is <b>{{ "%.2f"|format(distance) }}</b> meters</div>
     {% endif %}
     <script src="static/main.js"></script>
   </body>

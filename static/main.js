@@ -34,18 +34,24 @@ const map = new ol.Map({
 const myDraw = new ol.interaction.Draw({
   source: source,
   type: 'LineString',
+  maxPoints: 50,
+  minPoints: 2
 })
 
 map.addInteraction(myDraw);
 
 myDraw.on('drawend', function(evt) {
+  var features = source.getFeatures();
+  source.removeFeature(features[0]);
+  var aForm = document.getElementsByName("p");
+  while (aForm.length){
+    aForm[0].remove();
+  }
   evt.feature.getGeometry().getCoordinates().forEach(function(e){
-    console.log(e)
     var input = document.createElement("input");
     input.setAttribute("type", "hidden");
     input.setAttribute("name", "p");
     input.setAttribute("value", e[1]+':'+e[0]);
     document.getElementById("calcForm").appendChild(input)
   })
-
 });
